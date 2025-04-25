@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Matcher</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f7f9fb;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #e0f2f1;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00695c;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        main {
+            padding: 2rem;
+            text-align: center;
+        }
+        .upload-frame {
+            border: 2px dashed #ccc;
+            padding: 2rem;
+            margin: 1rem auto;
+            width: 50%;
+            border-radius: 8px;
+            background-color: #ffffff;
+            transition: border-color 0.3s;
+        }
+        .upload-frame:hover {
+            border-color: #90caf9;
+        }
+        input[type="file"] {
+            display: block;
+            margin: 0 auto 1rem;
+        }
+        .reset-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: #ffccbc;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .reset-btn:hover {
+            background-color: #ffab91;
+        }
+        .image-comparison {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            gap: 1rem;
+        }
+        .image-comparison img {
+            width: 200px;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        hr {
+            margin-top: 3rem;
+            border: none;
+            border-top: 1px solid #ccc;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.875rem;
+            padding: 1rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Image Similarity Checker
+        <div style="font-size: 0.9rem; font-weight: normal; color: #666; margin-top: 0.25rem;">
+            *Covers only 10 classes: airplane, automobile, bird, cat, dog, frog, horse, ship, truck
+        </div>
+    </header>
+    <main>
+        <div class="upload-frame" id="drop-area">
+            <p>Click to choose a directory or drag & drop an image file here</p>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+    
+        <button class="reset-btn" onclick="location.reload()">Reset</button>
+    
+        <div class="image-comparison" id="result">
+            <!-- Predicted images will be inserted here -->
+        </div>
+    </main>
+    <hr>
+    <footer>
+        &copy; Ryan Zhao | ryannayr.zhao@mail.utoronto.ca
+    </footer>
+
+    <script>
+      document.getElementById('imageInput').addEventListener('change', async function (e) {
+          const resultDiv = document.getElementById('result');
+          resultDiv.innerHTML = '';
+  
+          const file = e.target.files[0];
+          const formData = new FormData();
+          const basePath = 'D:/personal/stress/Practice_Project/Pytorch_Template/Practice_Dataset/cifar_images'
+          formData.append('image', file);
+  
+          // Send file to the Flask backend
+          const response = await fetch('/predict', {
+              method: 'POST',
+              body: formData
+          });
+          const result = await response.json();
+          console.log('Backend result:', result);
+
+          if (result.error) {
+              alert('Prediction error: ' + result.error);
+              return;
+          }
+  
+          // Build the image paths
+          const uploadedImg = URL.createObjectURL(file);
+          const matchedImg = `/static/matched/${result.class}/${result.filename}`;
+  
+          // Create image elements
+          const img1 = document.createElement('img');
+          img1.src = uploadedImg;
+  
+          const img2 = document.createElement('img');
+          img2.src = matchedImg;
+  
+          resultDiv.appendChild(img1);
+          resultDiv.appendChild(img2);
+      });
+  </script>
+</body>
+</html>
